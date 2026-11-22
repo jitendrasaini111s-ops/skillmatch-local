@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthShell, AuthButton, useAuthError, formInputClass, Field } from "@/components/auth-form";
+import { AuthShell, AuthButton, useAuthError, formInputClass, Field, ResendConfirmation } from "@/components/auth-form";
 
 const searchSchema = z.object({ redirect: z.string().optional() });
 
@@ -91,6 +91,7 @@ function Login() {
             {error}
           </p>
         )}
+        {error && /confirm your email/i.test(error) && <ResendConfirmation email={email} />}
         <AuthButton loading={loading} label="Sign in" />
       </form>
       <div className="mt-6 rounded-xl border border-primary-muted bg-primary-soft px-4 py-3 text-xs leading-relaxed text-primary-deep">

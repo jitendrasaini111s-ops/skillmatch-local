@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Briefcase } from 'lucide-react';
 import { Spinner } from '@/components/app-ui';
+import { supabase } from '@/integrations/supabase/client';
 
 export function AuthShell({
   title,
@@ -85,6 +86,7 @@ export function useAuthError() {
   const friendly = (message: string) => {
     if (message.includes('already registered')) return 'This email is already registered. Try signing in instead.';
     if (message.includes('Invalid login credentials')) return 'Incorrect email or password. Please try again.';
+    if (/email not confirmed/i.test(message)) return 'Please confirm your email first. Check your inbox (and spam folder) for the link.';
     if (message.includes('at least 6 characters')) return 'Password must be at least 6 characters long.';
     return message;
   };
@@ -103,3 +105,46 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
+
+/** Re-sends the sign-up confirmation email for the given address. */
+export function ResendConfirmation({ email }: { email: string }) {
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [message, setMessage] = useState('');
+
+  const resend = async () => {
+    if (!email) return;
+    setState('sending');
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    if (error) {
+      setState('error');
+      setMessage(error.message);
+      return;
+    }
+    setState('sent');
+    setMessage(`A new confirmation link is on its way to ${email}.`);
+  };
+
+  return (
+    <div className="mt-4 text-center text-sm">
+      <button
+        type="button"
+        onClick={resend}
+        disabled={state === 'sending' || !email}
+        className="font-semibold text-primary hover:text-primary-strong disabled:opacity-60"
+      >
+        {state === 'sending' ? 'Sending…' : "Didn't get the email? Send it again"}
+      </button>
+      {message && (
+        <p
+          className={`mt-2 text-xs ${state === 'error' ? 'text-destructive-strong' : 'text-muted-foreground'}`}
+        >
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}

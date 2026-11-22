@@ -27,15 +27,15 @@
       "capability": "records",
       "source": "Supabase tables (no export attached)",
       "outcome": "migrate",
-      "status": "pending",
-      "next_action": "Request per-table CSV/JSON export after preview"
+      "status": "accepted",
+      "next_action": "User chose \"Skip for now\"; import later if per-table exports are provided"
     },
     {
       "capability": "auth_identities",
       "source": "Supabase Auth email/password (no user export attached)",
       "outcome": "migrate",
-      "status": "pending",
-      "next_action": "Request user export (ids + emails); create accounts with original ids; users set password via 'Forgot password' email link (implemented at /forgot-password, /reset-password)"
+      "status": "accepted",
+      "next_action": "User chose \"Skip for now\"; import later from a user export; returning users use /forgot-password"
     },
     {
       "capability": "authorization",

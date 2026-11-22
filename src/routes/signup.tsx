@@ -10,6 +10,7 @@ import {
   useAuthError,
   formInputClass,
   Field,
+  ResendConfirmation,
 } from "@/components/auth-form";
 
 export const Route = createFileRoute("/signup")({
@@ -75,9 +76,10 @@ function Signup() {
             account, then sign in.
           </p>
         </div>
+        <ResendConfirmation email={email} />
         <Link
           to="/login"
-          className="mt-6 flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover"
+          className="mt-4 flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:bg-primary-hover"
         >
           Go to sign in
         </Link>
