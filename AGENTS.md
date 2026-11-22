@@ -28,3 +28,10 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Signed-in pages live under `src/routes/_authenticated/` (client-only gate, redirects to `/login`); page data loads via route loaders + `useSuspenseQuery` with query options in `src/lib/queries.ts`. Why: one auth gate and one cache for all protected pages.
+- Admin privileges come only from `public.user_roles` checked with `has_role`; `profiles.role` is just the client/worker account type and is not user-editable. Why: prevents privilege escalation.
+- Demo worker profiles have no sign-in account, so `profiles.id` has no foreign key to auth users; child tables reference profiles with `ON UPDATE CASCADE` so imported users can be re-linked to new account ids. Why: supports sample data and the Bolt user import.
+- AI job analysis runs in `src/lib/job-ai.server.ts`: the project's own Gemini key when `GEMINI_API_KEY` is set, otherwise a Gemini model through Lovable AI. Why: preserves the original provider while working without a key.
