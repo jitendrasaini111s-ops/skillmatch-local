@@ -7,6 +7,7 @@ import { useCurrentUser } from '@/hooks/use-current-user';
 import { jobDetailQuery, profileQuery } from '@/lib/queries';
 import { Spinner, Badge, MatchScore, SkillTag } from '@/components/app-ui';
 import { PageSpinner } from '@/components/PageSpinner';
+import { BestWorkersPanel } from '@/components/BestWorkersPanel';
 import {
   MapPin,
   CalendarDays,
@@ -54,7 +55,7 @@ function JobDetailPage() {
 }
 
 function JobDetail({ id }: { id: string }) {
-  const { profile } = useCurrentUser();
+  const { profile, isAdmin } = useCurrentUser();
   const { data } = useSuspenseQuery(jobDetailQuery(id, profile));
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -361,6 +362,8 @@ function JobDetail({ id }: { id: string }) {
         )}
         {error && <p className="mt-3 rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive-strong">{error}</p>}
       </div>
+
+      {(isOwner || isAdmin) && <BestWorkersPanel jobId={job.id} />}
 
       {isOwner && (
         <div className="mt-6">
