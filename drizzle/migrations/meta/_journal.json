@@ -8,6 +8,13 @@
       "when": 1795355665604,
       "tag": "0000_skillmatch_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795356246051,
+      "tag": "0001_admin_email_grant",
+      "breakpoints": true
     }
   ]
 }

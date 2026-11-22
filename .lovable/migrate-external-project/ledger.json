@@ -42,7 +42,7 @@
       "source": "RLS policies + role in profiles (client/worker)",
       "outcome": "migrate",
       "status": "migrated",
-      "next_action": "RLS recreated; admin seed now restricted to admins via user_roles (source allowed any user). Admin account pending user's email"
+      "next_action": "RLS recreated; admin seed restricted to admins via user_roles; admin granted on email confirmation for emails in public.admin_emails"
     },
     {
       "capability": "ai_job_extraction",
@@ -55,8 +55,8 @@
       "capability": "admin_seed",
       "source": "Admin page seeds 40 demo workers + 100 jobs (worker insert was blocked by RLS in source)",
       "outcome": "migrate via authenticated server function",
-      "status": "blocked",
-      "next_action": "Implemented; waiting for the admin email to grant the role, then verify"
+      "status": "migrated",
+      "next_action": "Admin role auto-granted when the listed admin email confirms sign-up (trigger tested); verify seeding once that account exists"
     },
     {
       "capability": "demo_mode",
