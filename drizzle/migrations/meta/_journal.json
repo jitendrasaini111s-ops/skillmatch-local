@@ -15,6 +15,13 @@
       "when": 1795356246051,
       "tag": "0001_admin_email_grant",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795358441561,
+      "tag": "0002_india_pincodes_and_sample_keys",
+      "breakpoints": true
     }
   ]
 }

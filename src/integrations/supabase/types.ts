@@ -82,7 +82,9 @@ export type Database = {
           description: string
           estimated_hours: number | null
           id: string
+          pincode: string | null
           required_skills: string[]
+          seed_key: string | null
           status: string
           title: string
           urgency: string
@@ -97,7 +99,9 @@ export type Database = {
           description?: string
           estimated_hours?: number | null
           id?: string
+          pincode?: string | null
           required_skills?: string[]
+          seed_key?: string | null
           status?: string
           title: string
           urgency?: string
@@ -112,7 +116,9 @@ export type Database = {
           description?: string
           estimated_hours?: number | null
           id?: string
+          pincode?: string | null
           required_skills?: string[]
+          seed_key?: string | null
           status?: string
           title?: string
           urgency?: string
@@ -127,6 +133,33 @@ export type Database = {
           },
         ]
       }
+      pincode_locations: {
+        Row: {
+          district: string
+          latitude: number
+          longitude: number
+          office_name: string
+          pincode: string
+          state: string
+        }
+        Insert: {
+          district?: string
+          latitude: number
+          longitude: number
+          office_name?: string
+          pincode: string
+          state?: string
+        }
+        Update: {
+          district?: string
+          latitude?: number
+          longitude?: number
+          office_name?: string
+          pincode?: string
+          state?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -136,7 +169,9 @@ export type Database = {
           full_name: string
           hourly_rate: number | null
           id: string
+          pincode: string | null
           role: string
+          seed_key: string | null
           skills: string[]
           updated_at: string
         }
@@ -148,7 +183,9 @@ export type Database = {
           full_name?: string
           hourly_rate?: number | null
           id?: string
+          pincode?: string | null
           role?: string
+          seed_key?: string | null
           skills?: string[]
           updated_at?: string
         }
@@ -160,7 +197,9 @@ export type Database = {
           full_name?: string
           hourly_rate?: number | null
           id?: string
+          pincode?: string | null
           role?: string
+          seed_key?: string | null
           skills?: string[]
           updated_at?: string
         }
