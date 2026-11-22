@@ -20,6 +20,8 @@ describe("AI match percentage rules", () => {
     // shared {math} / union {math, tutoring, algebra} = 1/3
     expect(skillOverlap(["Math", "tutoring"], ["math", "algebra"])).toBeCloseTo(33.33, 1);
     expect(skillOverlap(["math"], ["MATH"])).toBe(100);
+    // words {paint, drywall, repair} vs {paint, drywall, handyman}: 2 shared / 4 total
+    expect(skillOverlap(["painting", "drywall repair"], ["painting", "drywall", "handyman"])).toBe(50);
   });
 
   it("same-city bonus is 100 for the same city and 0 otherwise", () => {
@@ -47,5 +49,19 @@ describe("keyword-only comparison ranking", () => {
     ]);
     expect(ranked.map((r) => r.worker_id)).toEqual(["b"]);
     expect(ranked[0]?.matched).toEqual(expect.arrayContaining(["ikea", "wardrobe", "mount"]));
+  });
+
+  it("matches word forms like serve/server and remove/removal", () => {
+    const ranked = keywordRanking("Serve food and remove backgrounds", [
+      { id: "a", full_name: "A", skills: ["server", "background removal"], bio: "" },
+    ]);
+    expect(ranked[0]?.matched).toEqual(["serve", "remove", "backgrounds"]);
+  });
+
+  it("ignores generic filler words like reliable or experience", () => {
+    const ranked = keywordRanking("Looking for someone reliable with experience", [
+      { id: "a", full_name: "A", skills: [], bio: "Reliable worker with 5 years of experience" },
+    ]);
+    expect(ranked).toEqual([]);
   });
 });

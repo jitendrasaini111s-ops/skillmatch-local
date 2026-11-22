@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { rankWorkersWithAi, type AiCandidate } from "@/lib/match-ai.server";
+import { extractJobInfo } from "@/lib/job-ai.server";
 import {
   cityBonus,
   estimatedCost,
@@ -38,6 +39,13 @@ export interface KeywordWorkerMatch extends MatchedWorker {
   matched: string[];
 }
 
+export interface FilledJobInfo {
+  category: string;
+  required_skills: string[];
+  urgency: string;
+  estimated_hours: number | null;
+}
+
 export type FindBestWorkersResult =
   | {
       ok: true;
@@ -45,6 +53,8 @@ export type FindBestWorkersResult =
       keyword: KeywordWorkerMatch[];
       candidateCount: number;
       jobKeywordCount: number;
+      /** AI job details that were missing and have now been saved on the job. */
+      filledInfo: FilledJobInfo | null;
     }
   | { ok: false; error: string };
 
@@ -66,7 +76,7 @@ export const findBestWorkers = createServerFn({ method: "POST" })
       const sb = context.supabase;
       const { data: job, error: jobError } = await sb
         .from("jobs")
-        .select("id, client_id, title, description, category, city, budget, required_skills, estimated_hours")
+        .select("id, client_id, title, description, category, city, budget, required_skills, urgency, estimated_hours")
         .eq("id", data.jobId)
         .maybeSingle();
       if (jobError || !job) return { ok: false, error: "We couldn't find this job." };
@@ -95,9 +105,28 @@ export const findBestWorkers = createServerFn({ method: "POST" })
         return { ok: false, error: "There are no workers signed up yet, so there's no one to match." };
       }
 
-      const jobSkills = job.required_skills ?? [];
+      let jobSkills: string[] = job.required_skills ?? [];
       const budget = Number(job.budget);
-      const hours = job.estimated_hours != null ? Number(job.estimated_hours) : null;
+      let hours = job.estimated_hours != null ? Number(job.estimated_hours) : null;
+      let filledInfo: FilledJobInfo | null = null;
+
+      // Jobs added without the AI step (e.g. sample data) have no skills or hours yet:
+      // run the same AI job analysis now and save it, so skill overlap and price fit work.
+      if (jobSkills.length === 0) {
+        const extracted = await extractJobInfo(job.title, job.description, job.city);
+        if (extracted.ok) {
+          const info: FilledJobInfo = {
+            category: job.category && job.category !== "Other" ? job.category : extracted.info.category,
+            required_skills: extracted.info.required_skills,
+            urgency: job.urgency || extracted.info.urgency,
+            estimated_hours: hours ?? extracted.info.estimated_hours,
+          };
+          jobSkills = info.required_skills;
+          hours = info.estimated_hours;
+          const { data: saved } = await sb.from("jobs").update(info).eq("id", job.id).select("id");
+          if (saved && saved.length > 0) filledInfo = info;
+        }
+      }
       const jobKeywords = new Set(extractKeywords(`${job.title} ${job.description}`));
 
       // Shortlist the most plausible workers so the AI gets a focused list.
@@ -206,6 +235,7 @@ export const findBestWorkers = createServerFn({ method: "POST" })
         keyword,
         candidateCount: candidates.length,
         jobKeywordCount: extractKeywords(job.description).length,
+        filledInfo,
       };
     } catch (err) {
       console.error("findBestWorkers error:", err);

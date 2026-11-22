@@ -15,10 +15,26 @@ export type MatchComponents = Record<MatchComponentKey, number>;
 const clamp = (n: number, min = 0, max = 100) => Math.min(max, Math.max(min, n));
 const norm = (s: string) => s.trim().toLowerCase();
 
-/** Jaccard similarity of job skills and worker skills, scaled to 0-100. */
+const SKILL_FILLER = new Set(["and", "the", "for", "with", "of", "in", "on"]);
+
+/** Skill tags broken into stemmed words, so "drywall repair" and "drywall" share "drywall". */
+function skillWords(skills: string[]): Set<string> {
+  const out = new Set<string>();
+  for (const tag of skills) {
+    for (const w of norm(tag).split(/[^a-z0-9]+/)) {
+      if (w.length >= 2 && !SKILL_FILLER.has(w)) out.add(stemWord(w));
+    }
+  }
+  return out;
+}
+
+/**
+ * Jaccard similarity of job skills and worker skills (compared word by word, with light
+ * stemming so "painting" matches "paint"), scaled to 0-100.
+ */
 export function skillOverlap(jobSkills: string[], workerSkills: string[]): number {
-  const a = new Set(jobSkills.map(norm).filter(Boolean));
-  const b = new Set(workerSkills.map(norm).filter(Boolean));
+  const a = skillWords(jobSkills);
+  const b = skillWords(workerSkills);
   const union = new Set([...a, ...b]);
   if (union.size === 0) return 0;
   let shared = 0;
@@ -75,19 +91,35 @@ const STOPWORDS = new Set(
     "can could would should into onto about over under some any all who what when where which " +
     "please looking help job work want also just like make more most very each per get got its " +
     "them they their there here than then been being but not out off one two three week weeks day " +
-    "days hour hours time small local someone anyone able must around near via"
+    "days hour hours time small local someone anyone able must around near via " +
+    // Generic marketplace filler that says nothing about the task or the worker's skills.
+    "reliable easy message availability available reply quickly quick thanks thank friendly happy " +
+    "experience experienced year years specialist travel within city plus great good nice"
   ).split(" "),
 );
 
-/** Lowercase keywords (3+ letters, no common filler words, simple plural folding). */
-export function extractKeywords(text: string): string[] {
-  const out = new Set<string>();
-  for (const raw of (text ?? "").toLowerCase().split(/[^a-z0-9]+/)) {
-    if (raw.length < 3 || STOPWORDS.has(raw) || /^\d+$/.test(raw)) continue;
-    const word = raw.length > 4 && raw.endsWith("s") && !raw.endsWith("ss") ? raw.slice(0, -1) : raw;
-    out.add(word);
+const SUFFIXES = ["ings", "ing", "ers", "er", "ed", "es", "s", "al", "e"];
+
+/** Light stemming so "serve"/"server", "remove"/"removal" and "paint"/"painting" match. */
+export function stemWord(word: string): string {
+  for (const suffix of SUFFIXES) {
+    if (word.endsWith(suffix) && word.length - suffix.length >= 4) {
+      return word.slice(0, -suffix.length);
+    }
   }
-  return [...out];
+  return word;
+}
+
+function tokenize(text: string): string[] {
+  return (text ?? "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 3 && !STOPWORDS.has(w) && !/^\d+$/.test(w));
+}
+
+/** Distinct keyword stems in a text (3+ letters, no common filler words). */
+export function extractKeywords(text: string): string[] {
+  return [...new Set(tokenize(text).map(stemWord))];
 }
 
 export interface KeywordCandidate {
@@ -109,17 +141,23 @@ export function keywordRanking(
   workers: KeywordCandidate[],
   limit = 10,
 ): KeywordScore[] {
-  const jobKeywords = extractKeywords(description);
-  if (jobKeywords.length === 0) return [];
+  // Map each stem back to the word as written in the description, for display.
+  const display = new Map<string, string>();
+  for (const w of tokenize(description)) {
+    const stem = stemWord(w);
+    if (!display.has(stem)) display.set(stem, w);
+  }
+  const jobStems = [...display.keys()];
+  if (jobStems.length === 0) return [];
   return workers
     .map((w) => {
       const words = new Set(extractKeywords(`${w.skills.join(" ")} ${w.bio}`));
-      const matched = jobKeywords.filter((k) => words.has(k));
+      const matchedStems = jobStems.filter((k) => words.has(k));
       return {
         worker_id: w.id,
         name: w.full_name,
-        score: Math.round((matched.length / jobKeywords.length) * 100),
-        matched,
+        score: Math.round((matchedStems.length / jobStems.length) * 100),
+        matched: matchedStems.map((k) => display.get(k) ?? k),
       };
     })
     .filter((r) => r.matched.length > 0)

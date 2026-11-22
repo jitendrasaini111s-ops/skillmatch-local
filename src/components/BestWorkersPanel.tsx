@@ -5,6 +5,7 @@ import {
   findBestWorkers,
   type AiWorkerMatch,
   type FindBestWorkersResult,
+  type FilledJobInfo,
   type KeywordWorkerMatch,
   type MatchedWorker,
 } from '@/lib/match.functions';
@@ -24,7 +25,13 @@ const COMPONENT_ORDER: MatchComponentKey[] = ['ai', 'skills', 'city', 'price', '
 
 type Status = 'idle' | 'loading' | 'done' | 'error';
 
-export function BestWorkersPanel({ jobId }: { jobId: string }) {
+export function BestWorkersPanel({
+  jobId,
+  onJobInfoFilled,
+}: {
+  jobId: string;
+  onJobInfoFilled?: (info: FilledJobInfo) => void;
+}) {
   const runFind = useServerFn(findBestWorkers);
   const [status, setStatus] = useState<Status>('idle');
   const [result, setResult] = useState<Extract<FindBestWorkersResult, { ok: true }> | null>(null);
@@ -38,6 +45,7 @@ export function BestWorkersPanel({ jobId }: { jobId: string }) {
       const res = await runFind({ data: { jobId } });
       if (res.ok) {
         setResult(res);
+        if (res.filledInfo) onJobInfoFilled?.(res.filledInfo);
         setStatus('done');
       } else {
         setError(res.error);
@@ -109,6 +117,7 @@ export function BestWorkersPanel({ jobId }: { jobId: string }) {
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               Top {result.matches.length} of {result.candidateCount} shortlisted workers.
+              {result.filledInfo && ' AI also filled in the missing skills and hours for this job.'}
             </p>
             <div className="flex items-center gap-2">
               <Switch id="compare-keyword" checked={compare} onCheckedChange={setCompare} />

@@ -363,7 +363,15 @@ function JobDetail({ id }: { id: string }) {
         {error && <p className="mt-3 rounded-lg bg-destructive-soft px-3 py-2 text-sm text-destructive-strong">{error}</p>}
       </div>
 
-      {(isOwner || isAdmin) && <BestWorkersPanel jobId={job.id} />}
+      {(isOwner || isAdmin) && (
+        <BestWorkersPanel
+          jobId={job.id}
+          onJobInfoFilled={(info) => {
+            setJob((j) => (j ? { ...j, ...info } : j));
+            queryClient.invalidateQueries({ queryKey: ['jobs'] });
+          }}
+        />
+      )}
 
       {isOwner && (
         <div className="mt-6">
