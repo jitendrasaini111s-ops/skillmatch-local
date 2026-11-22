@@ -1,0 +1,20 @@
+{
+  "source": "bolt",
+  "project": "SkillMatch Local",
+  "capabilities": [
+    {"capability": "code", "source": "Vite + React 18 + react-router-dom SPA, 9 routes", "outcome": "migrate", "status": "in_progress", "next_action": "Port pages to TanStack Start file routes"},
+    {"capability": "design", "source": "Tailwind v3 utility classes (blue/slate palette), lucide icons", "outcome": "migrate", "status": "in_progress", "next_action": "Port palette into semantic tokens in src/styles.css"},
+    {"capability": "schema", "source": "supabase/migrations (profiles, jobs, applications, reviews, match RPCs, signup trigger)", "outcome": "migrate", "status": "pending", "next_action": "Recreate in Lovable Cloud"},
+    {"capability": "records", "source": "Supabase tables (no export attached)", "outcome": "migrate", "status": "pending", "next_action": "Request per-table CSV/JSON export after preview"},
+    {"capability": "auth_identities", "source": "Supabase Auth email/password (no user export attached)", "outcome": "migrate", "status": "pending", "next_action": "Request user export (ids + emails); import with original ids; first-login password setup via email link"},
+    {"capability": "authorization", "source": "RLS policies + role in profiles (client/worker)", "outcome": "migrate", "status": "pending", "next_action": "Recreate RLS and column grants"},
+    {"capability": "ai_job_extraction", "source": "Supabase edge function extract-job-info calling Gemini API (GEMINI_API_KEY)", "outcome": "preserve provider (Gemini), move to server function", "status": "pending", "next_action": "Server function + request GEMINI_API_KEY before verification"},
+    {"capability": "admin_seed", "source": "Admin page seeds 40 demo workers + 100 jobs (worker insert was blocked by RLS in source)", "outcome": "migrate via authenticated server function", "status": "pending", "next_action": "Implement"},
+    {"capability": "demo_mode", "source": "Offline demo data used only when backend env vars missing", "outcome": "drop (backend always configured in Lovable Cloud)", "status": "accepted", "next_action": "none"},
+    {"capability": "storage", "source": "avatar_url column only; no storage buckets used", "outcome": "none needed", "status": "accepted", "next_action": "none"},
+    {"capability": "realtime_schedules_webhooks_payments_email", "source": "none detected", "outcome": "none", "status": "accepted", "next_action": "none"},
+    {"capability": "secrets", "source": "VITE_SUPABASE_* (replaced by Cloud), GEMINI_API_KEY", "outcome": "request GEMINI_API_KEY via secure form", "status": "pending", "next_action": "Ask before AI verification"},
+    {"capability": "cutover", "source": "Bolt hosting", "outcome": "publish on Lovable", "status": "pending", "next_action": "User publishes"},
+    {"capability": "verification", "source": "-", "outcome": "-", "status": "pending", "next_action": "Build, routes, signup/login, post job, apply"}
+  ]
+}
