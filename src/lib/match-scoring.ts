@@ -1,6 +1,10 @@
 // Pure scoring rules for "Find best workers" (shared by the server and the UI).
 
-/** Final match % = 0.5 AI + 0.2 skills + 0.15 city + 0.1 price + 0.05 rating. */
+/**
+ * Final match % = 0.5 AI + 0.2 skills + 0.15 location + 0.1 price + 0.05 rating.
+ * The "city" key is the location component: distance in km when both PIN codes are known,
+ * otherwise the same-city check. Amounts (rate, budget) are Indian rupees.
+ */
 export const MATCH_WEIGHTS = {
   ai: 0.5,
   skills: 0.2,
@@ -42,11 +46,68 @@ export function skillOverlap(jobSkills: string[], workerSkills: string[]): numbe
   return (shared / union.size) * 100;
 }
 
-/** 100 when the worker is in the same city as the job, otherwise 0. */
+/** Fallback location score: 100 when the worker is in the same city as the job, otherwise 0. */
 export function cityBonus(jobCity: string, workerCity: string): number {
   const a = norm(jobCity ?? "");
   const b = norm(workerCity ?? "");
   return a !== "" && a === b ? 100 : 0;
+}
+
+// ---------- Distance (PIN code area centres) ----------
+
+export interface LatLng {
+  latitude: number;
+  longitude: number;
+}
+
+/** Straight-line distance in km between two points (haversine). */
+export function haversineKm(a: LatLng, b: LatLng): number {
+  const R = 6371;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(b.latitude - a.latitude);
+  const dLng = rad(b.longitude - a.longitude);
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+
+/** Full location score up to this distance. */
+export const DISTANCE_FULL_KM = 5;
+/** Location score reaches 0 at this distance. */
+export const DISTANCE_ZERO_KM = 50;
+
+/** 100 within 5 km, falling linearly to 0 at 50 km (and beyond). */
+export function distanceScore(km: number): number {
+  if (!(km >= 0)) return 0;
+  if (km <= DISTANCE_FULL_KM) return 100;
+  return clamp(100 * (1 - (km - DISTANCE_FULL_KM) / (DISTANCE_ZERO_KM - DISTANCE_FULL_KM)));
+}
+
+export type LocationBasis = "distance" | "city";
+
+export interface LocationFit {
+  score: number;
+  basis: LocationBasis;
+  /** Approximate km between PIN-area centres; null when either PIN has no known location. */
+  distance_km: number | null;
+}
+
+/**
+ * Location component: distance score when both PIN codes have coordinates, otherwise the
+ * same-city fallback. Never invents a distance for PINs without coordinates.
+ */
+export function locationFit(
+  jobPoint: LatLng | null | undefined,
+  workerPoint: LatLng | null | undefined,
+  jobCity: string,
+  workerCity: string,
+): LocationFit {
+  if (jobPoint && workerPoint) {
+    const km = Math.round(haversineKm(jobPoint, workerPoint) * 10) / 10;
+    return { score: distanceScore(km), basis: "distance", distance_km: km };
+  }
+  return { score: cityBonus(jobCity, workerCity), basis: "city", distance_km: null };
 }
 
 /** Worker's expected cost: hourly rate × estimated hours (or one hour when unknown). */
