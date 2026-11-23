@@ -280,6 +280,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_applied_to_job: { Args: { _job_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -287,6 +288,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_visible_client: { Args: { _profile_id: string }; Returns: boolean }
       rpc_match_jobs_for_worker: {
         Args: { p_worker_id: string }
         Returns: {
