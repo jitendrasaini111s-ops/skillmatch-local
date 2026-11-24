@@ -4,7 +4,7 @@ import { buildSeedRows } from "@/lib/seed-data";
 
 describe("AI job analysis rules", () => {
   it("falls back to the Other category for unknown categories", () => {
-    expect(validateExtraction({ category: "Gardening" }).category).toBe("Other");
+    expect(validateExtraction({ category: "Gardening" }).category).toBe("Other Professional Freelance Work");
   });
 
   it("defaults urgency to medium when the AI returns something unexpected", () => {
