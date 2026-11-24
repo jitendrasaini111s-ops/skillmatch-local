@@ -80,12 +80,16 @@ export type Database = {
           created_at: string
           deadline: string | null
           description: string
+          duration: string
           estimated_hours: number | null
+          experience_level: string
           id: string
           pincode: string | null
+          project_type: string
           required_skills: string[]
           seed_key: string | null
           status: string
+          subcategory: string
           title: string
           urgency: string
         }
@@ -97,12 +101,16 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string
+          duration?: string
           estimated_hours?: number | null
+          experience_level?: string
           id?: string
           pincode?: string | null
+          project_type?: string
           required_skills?: string[]
           seed_key?: string | null
           status?: string
+          subcategory?: string
           title: string
           urgency?: string
         }
@@ -114,12 +122,16 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string
+          duration?: string
           estimated_hours?: number | null
+          experience_level?: string
           id?: string
           pincode?: string | null
+          project_type?: string
           required_skills?: string[]
           seed_key?: string | null
           status?: string
+          subcategory?: string
           title?: string
           urgency?: string
         }
@@ -162,42 +174,54 @@ export type Database = {
       }
       profiles: {
         Row: {
+          availability: string
           avatar_url: string | null
           bio: string
           city: string
           created_at: string
+          experience_years: number | null
           full_name: string
           hourly_rate: number | null
           id: string
           pincode: string | null
+          portfolio_url: string | null
+          professional_title: string
           role: string
           seed_key: string | null
           skills: string[]
           updated_at: string
         }
         Insert: {
+          availability?: string
           avatar_url?: string | null
           bio?: string
           city?: string
           created_at?: string
+          experience_years?: number | null
           full_name?: string
           hourly_rate?: number | null
           id?: string
           pincode?: string | null
+          portfolio_url?: string | null
+          professional_title?: string
           role?: string
           seed_key?: string | null
           skills?: string[]
           updated_at?: string
         }
         Update: {
+          availability?: string
           avatar_url?: string | null
           bio?: string
           city?: string
           created_at?: string
+          experience_years?: number | null
           full_name?: string
           hourly_rate?: number | null
           id?: string
           pincode?: string | null
+          portfolio_url?: string | null
+          professional_title?: string
           role?: string
           seed_key?: string | null
           skills?: string[]

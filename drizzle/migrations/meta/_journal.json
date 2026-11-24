@@ -29,6 +29,13 @@
       "when": 1795402537134,
       "tag": "0003_tighten_marketplace_read_access",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795550128476,
+      "tag": "0004_freelance_fields",
+      "breakpoints": true
     }
   ]
 }

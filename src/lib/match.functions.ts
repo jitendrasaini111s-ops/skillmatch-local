@@ -65,6 +65,8 @@ interface WorkerRow {
   skills: string[];
   hourly_rate: number | null;
   city: string;
+  professional_title: string;
+  experience_years: number | null;
 }
 
 /** AI-ranked top 10 workers for a job, plus a keyword-only ranking for comparison. */
@@ -76,7 +78,7 @@ export const findBestWorkers = createServerFn({ method: "POST" })
       const sb = context.supabase;
       const { data: job, error: jobError } = await sb
         .from("jobs")
-        .select("id, client_id, title, description, category, city, budget, required_skills, urgency, estimated_hours")
+        .select("id, client_id, title, description, category, city, budget, required_skills, urgency, estimated_hours, experience_level, project_type")
         .eq("id", data.jobId)
         .maybeSingle();
       if (jobError || !job) return { ok: false, error: "We couldn't find this job." };
@@ -93,7 +95,7 @@ export const findBestWorkers = createServerFn({ method: "POST" })
 
       const { data: workerData, error: workersError } = await sb
         .from("profiles")
-        .select("id, full_name, bio, skills, hourly_rate, city")
+        .select("id, full_name, bio, skills, hourly_rate, city, professional_title, experience_years")
         .eq("role", "worker")
         .neq("full_name", "")
         .limit(1000);
@@ -131,7 +133,7 @@ export const findBestWorkers = createServerFn({ method: "POST" })
 
       // Shortlist the most plausible workers so the AI gets a focused list.
       const prescore = (w: WorkerRow) => {
-        const words = extractKeywords(`${w.skills.join(" ")} ${w.bio}`);
+        const words = extractKeywords(`${w.professional_title} ${w.skills.join(" ")} ${w.bio}`);
         const kw = jobKeywords.size ? words.filter((k) => jobKeywords.has(k)).length * 10 : 0;
         return (
           skillOverlap(jobSkills, w.skills) +
@@ -187,6 +189,8 @@ export const findBestWorkers = createServerFn({ method: "POST" })
           rating: base.rating,
           review_count: base.review_count,
           bio: w.bio ?? "",
+          title: w.professional_title ?? "",
+          experience_years: w.experience_years,
         };
       });
       const refToWorker = new Map(candidates.map((c, i) => [c.ref, shortlist[i]!]));
@@ -200,6 +204,8 @@ export const findBestWorkers = createServerFn({ method: "POST" })
           city: job.city,
           budget,
           estimated_hours: hours,
+          experience_level: job.experience_level,
+          project_type: job.project_type,
         },
         candidates,
       );

@@ -1,5 +1,6 @@
 // Job-description analysis (ported from the Bolt "extract-job-info" edge function).
-export const JOB_CATEGORIES = ["Tutoring", "Design", "Repairs", "Event Help", "Photo Editing", "Other"];
+import { JOB_CATEGORIES, OTHER_CATEGORY } from "./job-options";
+export { JOB_CATEGORIES };
 export const JOB_URGENCIES = ["low", "medium", "high"];
 
 export interface ExtractedJobInfo {
@@ -10,12 +11,12 @@ export interface ExtractedJobInfo {
 }
 
 export function buildPrompt(title: string, description: string, city: string): string {
-  return `Analyze this small job posting and return ONLY a JSON object, no markdown fences, no extra text.
+  return `Analyze this freelance project posted on an Indian freelance marketplace (budgets in Indian Rupees) and return ONLY a JSON object, no markdown fences, no extra text.
 
 Category must be exactly one of: ${JOB_CATEGORIES.join(", ")}.
 urgency must be exactly one of: ${JOB_URGENCIES.join(", ")} (based on deadline, phrasing, and how time-sensitive the task is).
-required_skills must be 2-5 short lowercase skill tags (e.g. "math", "photo editing", "ikea assembly").
-estimated_hours is a number of hours the task will likely take (may be fractional).
+required_skills must be 2-5 short lowercase skill tags (e.g. "react", "logo design", "seo", "python").
+estimated_hours is a number of working hours the project will likely take (may be fractional).
 
 Job title: ${title}
 City: ${city || "not specified"}
@@ -42,7 +43,7 @@ export function parseModelJson(text: string): Record<string, unknown> | null {
 export function validateExtraction(raw: Record<string, unknown>): ExtractedJobInfo {
   const categoryRaw = typeof raw["category"] === "string" ? raw["category"].trim() : "";
   const category =
-    JOB_CATEGORIES.find((c) => c.toLowerCase() === categoryRaw.toLowerCase()) ?? "Other";
+    JOB_CATEGORIES.find((c) => c.toLowerCase() === categoryRaw.toLowerCase()) ?? OTHER_CATEGORY;
   const skillsRaw = raw["required_skills"];
   const required_skills = Array.isArray(skillsRaw)
     ? skillsRaw

@@ -14,6 +14,8 @@ export interface AiJobInput {
   city: string;
   budget: number;
   estimated_hours: number | null;
+  experience_level?: string;
+  project_type?: string;
 }
 
 export interface AiCandidate {
@@ -24,6 +26,8 @@ export interface AiCandidate {
   rating: number | null;
   review_count: number;
   bio: string;
+  title?: string;
+  experience_years?: number | null;
 }
 
 export interface AiRanked {
@@ -57,8 +61,8 @@ const outputSchema = jsonSchema<AiOutput>({
   additionalProperties: false,
 });
 
-const INSTRUCTIONS = `You match local gig workers to a small job posted on a neighborhood marketplace.
-Judge every candidate on how well they fit THIS job: relevant skills, experience described in their bio, being in the job's city, hourly rate versus the job budget, and their rating.
+const INSTRUCTIONS = `You match freelancers to a freelance project posted on an Indian freelance marketplace (web development, design, writing, video, marketing, data, AI, apps, creative media).
+Judge every candidate on how well they fit THIS project: required technical skills versus their skills, their professional title and years of experience versus the requested experience level, relevance to the project category and requirements, hourly rate in Indian Rupees (INR) versus the project budget, rating, and (minor) location. Most work is remote.
 Return the 10 best candidates (fewer only if there are fewer than 10), best first.
 For each one give:
 - worker_ref: copied exactly from the candidate list
@@ -123,14 +127,18 @@ export async function rankWorkersWithAi(
       category: job.category,
       required_skills: job.required_skills,
       city: job.city || "not specified",
-      budget_usd_total: job.budget,
+      budget_inr_total: job.budget,
+      experience_level: job.experience_level ?? "any",
+      project_type: job.project_type ?? "fixed",
       estimated_hours: job.estimated_hours,
     },
     candidates: candidates.map((c) => ({
       worker_ref: c.ref,
       skills: c.skills,
       city: c.city,
-      hourly_rate_usd: c.hourly_rate,
+      hourly_rate_inr: c.hourly_rate,
+      professional_title: c.title ?? "",
+      experience_years: c.experience_years ?? null,
       rating_out_of_5: c.rating,
       review_count: c.review_count,
       bio: c.bio.slice(0, 300),
